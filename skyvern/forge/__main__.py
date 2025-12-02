@@ -33,7 +33,7 @@ if __name__ == "__main__":
         "skyvern.forge.api_app:create_api_app",
         host="0.0.0.0",
         port=port,
-        log_level="info",
+        log_level=settings.LOG_LEVEL.lower(),
         reload=reload,
         reload_excludes=[
             f"{temp_path_for_excludes}/**/*.py",

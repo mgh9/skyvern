@@ -98,7 +98,7 @@ def run_server() -> None:
         "skyvern.forge.api_app:create_api_app",
         host="0.0.0.0",
         port=port,
-        log_level="info",
+        log_level=settings.LOG_LEVEL.lower(),
         factory=True,
     )
 

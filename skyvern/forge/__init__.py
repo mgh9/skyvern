@@ -17,23 +17,33 @@ class AppHolder:
     def __getattr__(self, name: str) -> Any:
         inst = object.__getattribute__(self, "_inst")
         if inst is None:
-            raise RuntimeError("ForgeApp is not initialized. Call start_forge_app() before accessing app properties.")
+            # Lazily initialize to avoid crashes when the app is accessed before startup hooks run.
+            from skyvern.forge.forge_app_initializer import start_forge_app
+
+            inst = start_forge_app()
+            object.__setattr__(self, "_inst", inst)
 
         return getattr(inst, name)
 
     def __setattr__(self, name: str, value: Any) -> None:
         inst = object.__getattribute__(self, "_inst")
         if inst is None:
-            raise RuntimeError("ForgeApp is not initialized. Call start_forge_app() before accessing app properties.")
+            from skyvern.forge.forge_app_initializer import start_forge_app
+
+            inst = start_forge_app()
+            object.__setattr__(self, "_inst", inst)
 
         setattr(inst, name, value)
 
 
+_app_holder = AppHolder()
 if typing.TYPE_CHECKING:
     app: ForgeApp
 else:
-    app = AppHolder()  # type: ignore
+    app = _app_holder  # type: ignore
 
 
 def set_force_app_instance(inst: ForgeApp) -> None:
-    app.set_app(inst)  # type: ignore
+    # Always set on the holder and keep the package attribute pointing to it.
+    _app_holder.set_app(inst)  # type: ignore[name-defined]
+    globals()["app"] = _app_holder  # ensure subsequent imports see the holder

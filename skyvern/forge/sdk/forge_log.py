@@ -166,6 +166,10 @@ def setup_logger() -> None:
         + [skyvern_logs_processor, renderer],
     )
     uvicorn_error = logging.getLogger("uvicorn.error")
-    uvicorn_error.disabled = True
     uvicorn_access = logging.getLogger("uvicorn.access")
-    uvicorn_access.disabled = True
+    if settings.LOG_LEVEL.upper() != "DEBUG":
+        uvicorn_error.disabled = True
+        uvicorn_access.disabled = True
+    else:
+        uvicorn_error.setLevel(LOG_LEVEL_VAL)
+        uvicorn_access.setLevel(LOG_LEVEL_VAL)

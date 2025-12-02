@@ -200,3 +200,30 @@ def create_forge_app() -> ForgeApp:
     app.agent = ForgeAgent()
 
     return app
+
+app = create_forge_app()
+DATABASE = app.DATABASE
+
+# global variable to store the app instance
+FORGE_APP_INSTANCE: ForgeApp | None = None
+
+def set_app(inst: ForgeApp) -> None:
+    """Skyvern expects this function so forge_app_initializer can set the global instance."""
+    global FORGE_APP_INSTANCE
+    FORGE_APP_INSTANCE = inst
+
+
+def _current_app() -> ForgeApp:
+    """Return the active ForgeApp instance, falling back to the module-level default."""
+    return FORGE_APP_INSTANCE or app
+
+
+def __getattr__(name: str) -> Any:
+    """
+    Allow module-level attribute access (e.g., app.STORAGE) to fall through to the active ForgeApp.
+    This prevents AttributeErrors when consumers import `skyvern.forge.app` as a module.
+    """
+    try:
+        return getattr(_current_app(), name)
+    except AttributeError as exc:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from exc

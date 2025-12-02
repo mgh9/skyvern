@@ -57,17 +57,31 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, Any]:
     """Lifespan context manager for FastAPI app startup and shutdown."""
 
     LOG.info("Server started")
-    if forge_app.api_app_startup_event:
+    forge_app_instance = None
+    try:
+        forge_app_instance = forge_app  # type: ignore
+        startup_event = forge_app.api_app_startup_event
+    except RuntimeError:
+        LOG.warning("ForgeApp not initialized during startup; initializing now")
+        forge_app_instance = start_forge_app()
+        startup_event = forge_app_instance.api_app_startup_event if forge_app_instance else None
+
+    if startup_event:
         LOG.info("Calling api app startup event")
         try:
-            await forge_app.api_app_startup_event()
+            await startup_event()
         except Exception:
             LOG.exception("Failed to execute api app startup event")
     yield
-    if forge_app.api_app_shutdown_event:
+    try:
+        shutdown_event = forge_app_instance.api_app_shutdown_event if forge_app_instance else forge_app.api_app_shutdown_event
+    except RuntimeError:
+        shutdown_event = None
+
+    if shutdown_event:
         LOG.info("Calling api app shutdown event")
         try:
-            await forge_app.api_app_shutdown_event()
+            await shutdown_event()
         except Exception:
             LOG.exception("Failed to execute api app shutdown event")
     LOG.info("Server shutting down")

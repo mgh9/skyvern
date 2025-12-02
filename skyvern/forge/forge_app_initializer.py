@@ -2,7 +2,7 @@ import structlog
 
 from skyvern.config import settings
 from skyvern.forge import set_force_app_instance
-from skyvern.forge.forge_app import ForgeApp, create_forge_app
+from skyvern.forge.app import ForgeApp, create_forge_app
 
 LOG = structlog.get_logger()
 
