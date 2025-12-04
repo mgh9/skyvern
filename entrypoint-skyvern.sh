@@ -39,12 +39,14 @@ if [ ! -f ".streamlit/secrets.toml" ]; then
     echo ".streamlit/secrets.toml file updated with organization details."
 fi
 
-_kill_xvfb_on_term() {
-  kill -TERM $xvfb
+_kill_on_term() {
+  kill -TERM $xvfb 2>/dev/null || true
+  kill -TERM ${x11vnc_pid:-0} 2>/dev/null || true
+  kill -TERM ${novnc_pid:-0} 2>/dev/null || true
 }
 
 # Setup a trap to catch SIGTERM and relay it to child processes
-trap _kill_xvfb_on_term TERM
+trap _kill_on_term TERM
 
 echo "Starting Xvfb..."
 # delete the lock file if any
@@ -54,6 +56,15 @@ export DISPLAY=:99
 # Start Xvfb
 Xvfb :99 -screen 0 1920x1080x16 &
 xvfb=$!
+
+# Start VNC server and noVNC websockify for persisted browser streaming
+echo "Starting x11vnc..."
+x11vnc -display :99 -forever -nopw -listen 0.0.0.0 -rfbport 5900 -shared >/tmp/x11vnc.log 2>&1 &
+x11vnc_pid=$!
+
+echo "Starting noVNC (websockify)..."
+/usr/share/novnc/utils/novnc_proxy --listen 6080 --vnc localhost:5900 >/tmp/novnc.log 2>&1 &
+novnc_pid=$!
 
 DISPLAY=:99 xterm 2>/dev/null &
 python run_streaming.py > /dev/null &

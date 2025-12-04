@@ -50,7 +50,7 @@ async def verify_browser_session(
         dummy_browser_session = AddressablePersistentBrowserSession(
             persistent_browser_session_id=browser_session_id,
             organization_id=organization_id,
-            browser_address="0.0.0.0:9223",
+            browser_address="http://0.0.0.0:9223",
             created_at=datetime.now(),
             modified_at=datetime.now(),
         )

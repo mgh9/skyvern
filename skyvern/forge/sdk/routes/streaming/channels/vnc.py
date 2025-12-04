@@ -302,8 +302,12 @@ async def loop_stream_vnc(vnc_channel: VncChannel) -> None:
         else:
             browser_address = browser_session.browser_address
 
+            # Normalize address: allow bare host:port (no scheme) to be parsed as netloc.
+            if browser_address and "://" not in browser_address:
+                browser_address = f"//{browser_address}"
+
             parsed_browser_address = urlparse(browser_address)
-            host = parsed_browser_address.hostname
+            host = parsed_browser_address.hostname or parsed_browser_address.path.split(":")[0]
             vnc_url = f"ws://{host}:{vnc_channel.vnc_port}"
     else:
         raise Exception(f"{class_name} No browser session associated with vnc channel.")

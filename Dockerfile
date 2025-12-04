@@ -30,6 +30,12 @@ RUN cat /tmp/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodeso
     # confirm installation
     npm -v && node -v
 
+# VNC + noVNC for persisted browser streaming
+RUN apt-get update && \
+    apt-get install -y x11vnc novnc websockify && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 
 # install bitwarden cli
 RUN npm install -g @bitwarden/cli@2025.9.0
